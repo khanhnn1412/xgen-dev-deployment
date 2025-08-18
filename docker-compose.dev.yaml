@@ -1,0 +1,149 @@
+version: "3.9"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  frontend_node_modules:
+  chatbot_node_modules:
+  postgres_data:
+
+services:
+  frontend:
+    build:
+      context: ./website
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    environment:
+      - BACKEND_TARGET=http://backend:8000
+      - INFERENCE_TARGET=http://inference:8030
+      - INFERENCE_TARGET_WS=http://inference:8030
+      - NODE_ENV=development
+    volumes:
+      - ./website/:/app/
+      - frontend_node_modules:/app/node_modules
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+    command: ["npm", "run", "dev"]
+
+  chatbot:
+    build:
+      context: ./embed-chatbot
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+    environment:
+      - BACKEND_TARGET=http://backend:8000
+      - INFERENCE_TARGET=http://inference:8030
+      - INFERENCE_TARGET_WS=http://inference:8030
+      - NODE_ENV=development
+    volumes:
+      - ./embed-chatbot/:/app/
+      - chatbot_node_modules:/app/node_modules
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5173/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+    command: ["npm", "run", "dev"]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    volumes:
+      - ./backend/:/app/
+      - ./backend/requirements.txt:/app/requirements.txt
+    environment:
+      - CHAT_API_URL=http://inference:8030/api/chat/
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - INGESTION_SERVICE_URL=http://ingestion:8060
+      - PREPROCESSING_ENABLE=false
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  inference:
+    build:
+      context: ./inference_engine
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8030:8030"
+    networks:
+      - app-network
+    volumes:
+      - ./inference_engine/:/app/
+      - ./inference_engine/requirements.txt:/app/requirements.txt
+    environment:
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8030/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8030", "--reload"]
+
+  ingestion:
+    build:
+      context: ./ingestion
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8060:8060"
+    networks:
+      - app-network
+    volumes:
+      - ./ingestion/:/app/
+      - ./ingestion/requirements.txt:/app/requirements.txt
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8060/health-check" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8060", "--reload"]
+  
+  postgres:
+    build:
+      context: postgres
+      dockerfile: Dockerfile
+    image: techx-genai-platform/postgres:1.0.0
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    environment:
+      POSTGRES_DB: xgenai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
