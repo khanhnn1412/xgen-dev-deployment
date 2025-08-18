@@ -1,0 +1,24 @@
+FROM python:3.11.2-slim
+
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+# Install development dependencies for hot reload
+RUN pip install --no-cache-dir uvicorn[standard] watchdog
+
+# Create a non-root user
+RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
+USER app
+
+# Copy source code
+COPY src/ /src/
+
+# Move to src directory
+WORKDIR /src
+
+EXPOSE 8060
+
+# Command to run with hot reload
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8060", "--reload"]

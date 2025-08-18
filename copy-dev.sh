@@ -52,14 +52,14 @@ print_status "Created target directory: $TARGET_FOLDER"
 # Copy main deployment files
 print_status "Copying main deployment files..."
 
-cp src/dev.sh "$TARGET_FOLDER/"
-cp src/docker-compose.dev.yaml "$TARGET_FOLDER/"
+cp src/dev.sh "$TARGET_FOLDER/src/"
+cp src/docker-compose.dev.yaml "$TARGET_FOLDER/src"
 
 # Create service directories
 mkdir -p "$TARGET_FOLDER/src/backend"
 mkdir -p "$TARGET_FOLDER/src/inference_engine"
-mkdir -p "$TARGET_FOLDER/src/frontend"
-mkdir -p "$TARGET_FOLDER/src/widget-chatbot"
+mkdir -p "$TARGET_FOLDER/src/ingestion"
+mkdir -p "$TARGET_FOLDER/src/website"
 
 print_status "Created service directories"
 
@@ -82,50 +82,24 @@ else
     print_warning "inference_engine/Dockerfile.dev not found, skipping"
 fi
 
-# Frontend
-if [ -f "src/frontend/Dockerfile.dev" ]; then
-    cp src/frontend/Dockerfile.dev "$TARGET_FOLDER/src/frontend/"
-    print_status "✓ Copied frontend/Dockerfile.dev"
+# Ingestion
+if [ -f "src/ingestion/Dockerfile.dev" ]; then
+    cp src/ingestion/Dockerfile.dev "$TARGET_FOLDER/src/ingestion/"
+    print_status "✓ Copied ingestion/Dockerfile.dev"
 else
-    print_warning "frontend/Dockerfile.dev not found, skipping"
+    print_warning "ingestion/Dockerfile.dev not found, skipping"
 fi
 
-# Chatbot
-if [ -f "src/widget-chatbot/Dockerfile.dev" ]; then
-    cp src/widget-chatbot/Dockerfile.dev "$TARGET_FOLDER/src/widget-chatbot/"
-    print_status "✓ Copied widget-chatbot/Dockerfile.dev"
+# Website
+if [ -f "src/website/Dockerfile.dev" ]; then
+    cp src/website/Dockerfile.dev "$TARGET_FOLDER/src/website/"
+    print_status "✓ Copied website/Dockerfile.dev"
 else
-    print_warning "widget-chatbot/Dockerfile.dev not found, skipping"
-fi
-
-# Copy requirements.txt files if they exist
-print_status "Copying requirements.txt files..."
-
-if [ -f "src/backend/requirements.txt" ]; then
-    cp src/backend/requirements.txt "$TARGET_FOLDER/src/backend/"
-    print_status "✓ Copied backend/requirements.txt"
-fi
-
-if [ -f "src/inference_engine/requirements.txt" ]; then
-    cp src/inference_engine/requirements.txt "$TARGET_FOLDER/src/inference_engine/"
-    print_status "✓ Copied inference_engine/requirements.txt"
-fi
-
-# Copy package.json files if they exist
-print_status "Copying package.json files..."
-
-if [ -f "src/frontend/package.json" ]; then
-    cp src/frontend/package.json "$TARGET_FOLDER/src/frontend/"
-    print_status "✓ Copied frontend/package.json"
-fi
-
-if [ -f "src/widget-chatbot/package.json" ]; then
-    cp src/widget-chatbot/package.json "$TARGET_FOLDER/src/widget-chatbot/"
-    print_status "✓ Copied widget-chatbot/package.json"
+    print_warning "website/Dockerfile.dev not found, skipping"
 fi
 
 # Make dev.sh executable
-chmod +x "$TARGET_FOLDER/dev.sh"
+chmod +x "$TARGET_FOLDER/src/dev.sh"
 
 print_header "Deployment files copied successfully!"
 
@@ -134,10 +108,8 @@ echo "  - dev.sh"
 echo "  - docker-compose.dev.yaml"
 echo "  - src/backend/Dockerfile.dev (if exists)"
 echo "  - src/inference_engine/Dockerfile.dev (if exists)"
-echo "  - src/frontend/Dockerfile.dev (if exists)"
-echo "  - src/widget-chatbot/Dockerfile.dev (if exists)"
-echo "  - requirements.txt files (if exist)"
-echo "  - package.json files (if exist)"
+echo "  - src/ingestion/Dockerfile.dev (if exists)"
+echo "  - src/website/Dockerfile.dev (if exists)"
 
 print_status "Next steps:"
 echo "  1. Copy your source code to the src/ directories"
