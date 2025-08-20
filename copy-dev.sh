@@ -60,6 +60,7 @@ mkdir -p "$TARGET_FOLDER/src/backend"
 mkdir -p "$TARGET_FOLDER/src/inference_engine"
 mkdir -p "$TARGET_FOLDER/src/ingestion"
 mkdir -p "$TARGET_FOLDER/src/website"
+mkdir -p "$TARGET_FOLDER/src/embed-chatbot"
 
 print_status "Created service directories"
 
@@ -98,6 +99,14 @@ else
     print_warning "website/Dockerfile.dev not found, skipping"
 fi
 
+# Embed-chatbot
+if [ -f "src/embed-chatbot/Dockerfile.dev" ]; then
+    cp src/website/Dockerfile.dev "$TARGET_FOLDER/src/embed-chatbot/"
+    print_status "✓ Copied embed-chatbot/Dockerfile.dev"
+else
+    print_warning "embed-chatbot/Dockerfile.dev not found, skipping"
+fi
+
 # Make dev.sh executable
 chmod +x "$TARGET_FOLDER/src/dev.sh"
 
@@ -110,6 +119,7 @@ echo "  - src/backend/Dockerfile.dev (if exists)"
 echo "  - src/inference_engine/Dockerfile.dev (if exists)"
 echo "  - src/ingestion/Dockerfile.dev (if exists)"
 echo "  - src/website/Dockerfile.dev (if exists)"
+echo "  - src/embed-chatbot/Dockerfile.dev (if exists)"
 
 print_status "Next steps:"
 echo "  1. Copy your source code to the src/ directories"
