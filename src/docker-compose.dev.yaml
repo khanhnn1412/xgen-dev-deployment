@@ -101,6 +101,11 @@ services:
       - AWS_SECRET_ACCESS_KEY=
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - db_name=xgenai
+      - db_host=postgres
+      - db_password=
+      - db_port=5432
+      - db_user=postgres
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8030/health" ]
       interval: 30s
